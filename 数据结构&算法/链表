@@ -1,0 +1,56 @@
+1.链表反转:https://blog.csdn.net/qq_43605381/article/details/108698890
+(1)迭代：从当前链表的首元节点开始，一直遍历至链表的最后一个节点，这期间会逐个改变所遍历到的节点的指针域，另其指向前一个节点。
+link *reverse(link *head)
+{
+    if (head ==NULL || head->next == NULL) {
+        return head;
+    }
+    link *beg = NULL;
+    link *mid = head;
+    link *end = head->next;
+    while(1) {
+        //反转
+        mid->next = beg;
+        if (end == NULL) {
+            break;
+        }
+        //后移处理下一个节点
+        beg = mid;
+        mid = end;
+        end = end->next;
+    }
+    head = mid;
+    reruen head;
+}
+(2)递归：从链表的尾节点开始，依次向前遍历，遍历过程依次改变各节点的指向，即令其指向前一个节点。
+link *reverse(link *head)
+{
+    if (head == NULL || head->next == NULL) {
+        returen head;
+    }
+    //层层递归找到最后一个节点，newHead一直都是原最后一个节点；
+    link *newHead = reverse(head->next);
+    //每退出一层，实现一个反转；
+    head->next->next = head;
+    //最后新的尾节点的next设为NULL；
+    head->next = NULL;
+    return newHead;
+}
+(3)头插法：在原有链表的基础上，依次将位于链表头部的节点摘下，然后采用从头部插入的方式生成一个新链表，则此链表即为原链表的反转版。
+link *reverse(link *head)
+{
+    if (head == NULL || head->next == NULL) {
+        return head;
+    }
+    link *newHead = NULL;
+    link *temp = NULL;
+    while(head != NULL) {
+        //取出一个节点
+        temp = head;
+        head = head->next;
+        //头插法
+        temp->next = newHead;
+        newHead = temp;
+    }
+    return newHead;
+}
