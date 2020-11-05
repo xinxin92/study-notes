@@ -1,0 +1,128 @@
+1、二叉树遍历：https://blog.csdn.net/baidu_30000217/article/details/52953127
+深度优先遍历分为三种：
+前序：根节点->左子树->右子树
+中序：左子树->根节点->右子树
+后序：左子树->右子树->根节点
+广度优先遍历：层序遍历；
+二叉树的深度优先遍历的非递归的通用做法是采用栈，广度优先遍历的非递归的通用做法是采用队列。
+
+class Node
+{
+    public $data;
+    public $left;
+    public $right;
+}
+//前序遍历（递归）
+private function preOrder($root)
+{
+    if (is_null($root)) {
+        return;
+    }
+    echo $root->data.' ';
+    $this->preSort($root->left);
+    $this->preSort($root->right);
+}
+//中序遍历（递归）
+private function midOrder($root)
+{
+    if (is_null($root)) {
+        return;
+    }
+    $this->midSort($root->left);
+    echo $root->data.' ';
+    $this->midSort($root->right);
+}
+//后序遍历（递归）
+private function postOrder($root)
+{
+    if (is_null($root)) {
+        return;
+    }
+    $this->midSort($root->left);
+    $this->midSort($root->right);
+    echo $root->data.' ';
+}
+
+//前序遍历（非递归）：首先我们应该创建一个Stack用来存放节点，首先我们想要打印根节点的数据，此时Stack里面的内容为空，所以我们优先将头结点加入Stack，然后打印。之后我们应该先打印左子树，然后右子树。所以先加入Stack的就是右子树，然后左子树。
+private function preOrder($root)
+{
+    if (is_null($root)) {
+        return;
+    }
+    $stack = array();
+    array_push($stack,$root);
+    while (!empty($stack)) {
+        $centerNode = array_pop($stack);
+        echo $centerNode->data.' ';
+        if (!is_null($centerNode->right)) {
+            array_push($stack,$centerNode->right);
+        }
+        if (!is_null($centerNode->left)) {
+            array_push($stack,$centerNode->left);
+        }
+    }
+}
+//中序遍历（非递归）：同理创建一个Stack，然后按 左 中 右的顺序输出节点。尽可能的将这个节点的左子树压入Stack，此时栈顶的元素是最左侧的元素，其目的是找到一个最小单位的子树(也就是最左侧的一个节点)，并且在寻找的过程中记录了来源，才能返回上层,同时在返回上层的时候已经处理完毕左子树了。当处理完最小单位的子树时，返回到上层处理了中间节点。（如果把整个左中右的遍历都理解成子树的话，就是处理完 左子树->中间(就是一个节点)->右子树）如果有右节点，其也要进行中序遍历。
+private function midOrder($root)
+{
+    if (is_null($root)) {
+        return;
+    }
+    $stack = array();
+    $centerNode = $root;
+    while (!empty($stack) || !is_null($centerNode)) {
+        while (!is_null($centerNode)) {
+            array_push($stack,$centerNode);
+            $centerNode = $centerNode->left;
+        }
+        $centerNode = array_pop($stack);
+        echo $centerNode->data.' ';
+        $centerNode = $centerNode->right;
+    }
+}
+//后序遍历（非递归）：前序遍历的过程 是 中左右。将其转化成 中右左。也就是压栈的过程中优先压入左子树，在压入右子树。然后将这个结果返回来，这里是利用栈的先进后出倒序打印。
+private function postOrder($root)
+{
+    if (is_null($root)) {
+        return;
+    }
+    $stack = array();
+    $outStack = array();
+    array_push($stack,$root);
+    while (!empty($stack)) {
+        $centerNode = array_pop($stack);
+        array_push($outStack,$centerNode);
+        if (!is_null($centerNode->left)) {
+            array_push($stack,$centerNode->left);
+        }
+        if (!is_null($centerNode->right)) {
+            array_push($stack,$centerNode->right);
+        }
+    }
+    while (!empty($outStack)) {
+        $node = array_pop($outStack);
+        echo $node->data.' ';
+    }
+}
+
+//层次遍历：
+private function levelOrder($root)
+{
+    if (is_null($root)) {
+        return;
+    }
+    $queue = array();
+    array_unshift($queue,$root);
+    while (!empty($queue)) {
+        $centerNode = array_pop($queue);
+        echo $centerNode->data.' ';
+        if (!is_null($centerNode->left)) {
+            array_unshift($queue,$centerNode->left);
+        }
+        if (!is_null($centerNode->right)) {
+            array_unshift($queue,$centerNode->right);
+        }
+    }
+}
+
+

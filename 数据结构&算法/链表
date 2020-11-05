@@ -1,4 +1,4 @@
-1.链表反转:https://blog.csdn.net/qq_43605381/article/details/108698890
+1、链表反转:https://blog.csdn.net/qq_43605381/article/details/108698890
 (1)迭代：从当前链表的首元节点开始，一直遍历至链表的最后一个节点，这期间会逐个改变所遍历到的节点的指针域，另其指向前一个节点。
 link *reverse(link *head)
 {
