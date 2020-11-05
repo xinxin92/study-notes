@@ -1,5 +1,35 @@
 1、链表反转:https://blog.csdn.net/qq_43605381/article/details/108698890
 (1)迭代：从当前链表的首元节点开始，一直遍历至链表的最后一个节点，这期间会逐个改变所遍历到的节点的指针域，另其指向前一个节点。
+class Node
+{
+    public $data;
+    public $next;
+    public function __construct($data = null,$next = null)
+    {
+        $this->data = $data;
+        $this->next = $next;
+    }
+}
+private function reverse($head)
+{
+    if ($head == null || $head->next == null) {
+        return $head;
+    }
+    $pre = null;
+    $mid = $head;
+    $end = $head->next;
+    while(1) {
+        $mid->next = $pre;
+        if ($end == null) {
+            break;
+        }
+        $pre = $mid;
+        $mid = $end;
+        $end = $end->next;
+    }
+    $head = $mid;
+    return $head;
+}
 link *reverse(link *head)
 {
     if (head ==NULL || head->next == NULL) {
