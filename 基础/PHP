@@ -1,0 +1,42 @@
+1.for与foreach区别：https://ishare.58corp.com/articleDetail?id=913
+从编译运行原理上分析：
+（1）获取下一个元素的方式不同，for通过操作key的加减，然后进行一次hash得到；foreach直接通过结构体中的 遍历指针 获取下一个值；
+（2）foreach是对数组的一个拷贝进行操作. 所以在循环过程中修改不影响循环结果；而for不存在拷贝这种操作；
+2.php执行过程、opcache、JIT: https://www.cnblogs.com/a609251438/p/12980919.html
+PHP是解释型语言，每次执行PHP代码（命令行脚本或者 WEB 应用）时，都要经过PHP解释器。最常用的是 PHP-FPM 和 CLI 解释器。
+phpcode-> [tokens关键字->AST抽象语法树->opcodes] ->zend vm-> 机器码 ->cup
+                ->              opcache                  ->
+                                        ->DynASM(php8JIT)->
+3.php5: zvalue结构体：
+zval：
+struct _zval_struct {
+    zvalue_value value;  //存储变量的值
+    zend_uint refcout_gc;  //表示引用计数
+    zend_uchar type;  //变量具体的类型
+    zend_uchar is_ref_gc;  //表示是否为引用
+};
+zvalue_value：
+typedef union _zvalue_value {
+    long lval;
+    double dval;
+    struct {
+        char *val;
+        int len;
+    } str;
+     HashTable *ht;
+    zend_object_value obj;
+} zvalue_value;
+
+4.php底层运行原理：https://www.cnblogs.com/wanglijun/p/8830932.html
+多进程多线程模型；弱类型语言；
+引擎（Zend）+组件（ext）的模式降低内部耦合；
+架构：上层应用(如nginx)->sapi（如cgi）->php->zend；
+php5的Zend hashtable实现了hash表散列结构，同时附加一个双向链表，提供了正向、反向遍历功能;
+
+5.cgi/fastcgi:https://blog.csdn.net/belen_xue/article/details/65950658
+cgi和fastcgi都是一种协议，是上层应用服务器如nginx和语言通信的协议桥梁；fastcgi相比cgi针对频繁开启关闭做了优化；
+php_fpm和php-cgi是 php提供的 服务器与php通信的 fastcgi和cgi协议接口程序；
+php-fpm还附带一些其他的功能：例如平滑过渡配置更改;
+php-fpm采用master/worker架构设计,在worker进程处理请求时，无需初始化PHP运行环境。
+6.fastcgi_finish_request()之后的代码，虽然不占Web服务器时间，快速响应。后边的代码还是要占用work进程的时间。耗时较长的可以用异步事件模式。
+
