@@ -1,0 +1,3 @@
+#php连接redis的connect和pconnect方法的区别：
+connect：脚本结束之后连接就释放了；
+pconnect：脚本结束之后连接不释放，连接保持在php-fpm进程中。每个php-fpm进程占用一个连接，当php-fpm进程结束时会释放掉；
