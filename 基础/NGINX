@@ -1,0 +1,33 @@
+#反向代理配置&负载均衡配置：https://www.runoob.com/w3cnote/nginx-proxy-balancing.html
+server {
+    ...
+    location  ~*^.+$ {
+        proxy_pass $scheme://mysvr;  #upstream的name
+    }
+}
+热备：
+upstream team_server {
+    server 192.168.11.121:8080;
+    server 192.168.11.122:8080 backup;  #热备
+}
+轮询：
+upstream mysvr {
+    server 127.0.0.1:7878;
+    server 192.168.10.121:3333;
+}
+加权轮询：
+upstream mysvr {
+    server 127.0.0.1:7878 weight=1;
+    server 192.168.10.121:3333 weight=2;
+}
+ip_hash：
+upstream mysvr {
+    server 127.0.0.1:7878;
+    server 192.168.10.121:3333;
+    ip_hash;
+}
+关于nginx负载均衡配置的几个状态参数讲解:
+down，表示当前的server暂时不参与负载均衡。
+backup，预留的备份机器。当其他所有的非backup机器出现故障或者忙的时候，才会请求backup机器，因此这台机器的压力最轻。
+max_fails，允许请求失败的次数，默认为1。当超过最大次数时，返回proxy_next_upstream 模块定义的错误。
+fail_timeout，在经历了max_fails次失败后，暂停服务的时间。max_fails可以和fail_timeout一起使用。
