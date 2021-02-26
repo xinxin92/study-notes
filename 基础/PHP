@@ -7,7 +7,8 @@ PHP是解释型语言，每次执行PHP代码（命令行脚本或者 WEB 应用
 phpcode-> [tokens关键字->AST抽象语法树->opcodes] ->zend vm-> 机器码 ->cup
                 ->              opcache                  ->
                                         ->DynASM(php8JIT)->
-3.php5: zvalue结构体：
+3.php7与php5zval的区别：https://blog.csdn.net/wsliangjian/article/details/101199164
+php5: zvalue结构体：
 zval：
 struct _zval_struct {
     zvalue_value value;  //存储变量的值

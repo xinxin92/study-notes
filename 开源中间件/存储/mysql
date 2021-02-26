@@ -1,0 +1,24 @@
+#一个查询执行的流程（redolog undolog binlog 二段提交）：https://blog.csdn.net/qq_32555377/article/details/110792393
+连接器-》缓存查询 || 分析器-》优化器-》执行器-》存储引擎
+写操作时：innodb引擎会写redolog、undolog、binlog，并更新内存，此时写操作就算完成了； 引擎会在合适的时机将记录写到磁盘中；
+redolog: 用于数据库异常重启时恢复数据页；
+undolog：保证事务原子性及实现MVCC多版本并发控制；
+binlog:  用于主从同步和数据库基于时间点的还原；
+
+#innodb与myisam 区别，数据落地怎么存储：
+MyISAM不支持事务，InnoDB支持事务；
+MyISAM只支持表级锁，InnoDB支持到行级锁；
+MyISAM适合查询以及插入为主的应用，InnoDB适合频繁修改以及涉及到安全性较高的应用；
+数据存储方面：
+MyISAM数据文件和索引文件分开存储； InnoDB不分开，索引就是数据；
+MyISAM的B+Tree索引的叶节点的data存放数据记录的地址，而InnoDB聚集索引叶节点的data存放完整数据记录，非聚集索引叶节点的data存放主键值；
+64个连续页（16KB）-》簇（1M）-》段；
+
+#为什么innodb用b+树不用二叉树：
+B树是为磁盘设计的多路平衡查找树，与二叉树相比，B树的每个非叶节点可以有多个子树，所以树高小，B树具有磁盘IO次数少，缓存命中率高的优势；
+B+树的叶节点之间通过双向链表链接，更适于范围查询；
+
+#主从复制流程：
+第一步：master在每个事务更新数据完成之前，将该操作记录串行地写入到binlog文件中。
+第二步：salve开启一个I/O线程连接master，请求某个binlog，position之后的内容，并将日志内容写入到relay-log中继日志。
+第三步：salve的SQL线程实时监控relay-log中继日志，并顺序执行该日志中的SQL事件。

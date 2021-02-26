@@ -1,3 +1,10 @@
 #php连接redis的connect和pconnect方法的区别：
 connect：脚本结束之后连接就释放了；
 pconnect：脚本结束之后连接不释放，连接保持在php-fpm进程中。每个php-fpm进程占用一个连接，当php-fpm进程结束时会释放掉；
+
+各类型的数据结构：https://www.cnblogs.com/xuxinstyle/p/13282918.html
+1.字符串：SDS;
+2.列表：由ziplist组成的双向列表；
+3.哈希：ziplist或hashtable；
+4.集合：hashtable（有键没有值）；
+5.有序集合：ziplist或skiplist与dict的结合；
