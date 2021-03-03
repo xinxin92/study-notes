@@ -7,32 +7,88 @@ PHP是解释型语言，每次执行PHP代码（命令行脚本或者 WEB 应用
 phpcode-> [tokens关键字->AST抽象语法树->opcodes] ->zend vm-> 机器码 ->cup
                 ->              opcache                  ->
                                         ->DynASM(php8JIT)->
-3.php7与php5zval的区别：https://blog.csdn.net/wsliangjian/article/details/101199164
-php5: zvalue结构体：
-zval：
-struct _zval_struct {
-    zvalue_value value;  //存储变量的值
-    zend_uint refcout_gc;  //表示引用计数
-    zend_uchar type;  //变量具体的类型
-    zend_uchar is_ref_gc;  //表示是否为引用
-};
-zvalue_value：
-typedef union _zvalue_value {
-    long lval;
-    double dval;
-    struct {
-        char *val;
-        int len;
-    } str;
-     HashTable *ht;
-    zend_object_value obj;
-} zvalue_value;
 
-4.php底层运行原理：https://www.cnblogs.com/wanglijun/p/8830932.html
+#php5: zvalue结构体：
+struct _zval_struct {
+     union {
+          long lval;
+          double dval;
+          struct {
+               char *val;
+               int len;
+          } str;
+          HashTable *ht;
+          zend_object_value obj;
+          zend_ast *ast;
+     } value;
+     zend_uint refcount__gc;
+     zend_uchar type;
+     zend_uchar is_ref__gc;
+};
+
+#php7 zval结构体：
+struct _zval_struct {
+     union {
+          zend_long         lval;             /* long value */
+          double            dval;             /* double value */
+          zend_refcounted  *counted;
+          zend_string      *str;
+          zend_array       *arr;
+          zend_object      *obj;
+          zend_resource    *res;
+          zend_reference   *ref;
+          zend_ast_ref     *ast;
+          zval             *zv;
+          void             *ptr;
+          zend_class_entry *ce;
+          zend_function    *func;
+          struct {
+               uint32_t w1;
+               uint32_t w2;
+          } ww;
+     } value;
+
+    union {
+        struct {
+            ZEND_ENDIAN_LOHI_4(
+                zend_uchar    type,         /* active type */
+                zend_uchar    type_flags,
+                zend_uchar    const_flags,
+                zend_uchar    reserved)     /* call info for EX(This) */
+        } v;
+        uint32_t type_info;
+    } u1;
+
+    union {
+        uint32_t     var_flags;
+        uint32_t     next;                 /* hash collision chain */
+        uint32_t     cache_slot;           /* literal cache slot */
+        uint32_t     lineno;               /* line number (for ast nodes) */
+        uint32_t     num_args;             /* arguments number for EX(This) */
+        uint32_t     fe_pos;               /* foreach position */
+        uint32_t     fe_iter_idx;          /* foreach iterator index */
+    } u2;
+};
+
+#总结php7相比php5的优化：降低内存占用，减少内存分配操作，数据遍历过程对缓存更友好（连续内存线性遍历）；
+
+#php7与php5关于zval的区别：https://www.php.cn/topic/php7/416601.html
+一、结构体方面差异：
+1.php5是.....; php7是.....;
+二、引用计数方面：php7zval自己不再存储引用计数,减少了大量引用计数相关的操作；
+1.对于那种根本没有值, 只有类型的类型, 不需要引用计数了（IS_NULL、IS_FALSE、IS_TRUE）:
+2.PHP7对zval的value字段中能保存下的值, 就不再引用计数了, 而是在拷贝时候直接赋值, 省掉了大量引用计数相关的操作(IS_LONG、IS_DOUBLE);
+3.对于复杂类型：value来保存一个指针, 这个指针指向这个具体的值, 引用计数也随之作用于这个值上, 而不在是作用于zval上了；
+三、内存分配方面：php7不再独立分配内存，由zval的使用者例如hashtable分配时一并分配，减少内存分配操作；
+
+#php7相比php5的hashtable的区别:https://blog.csdn.net/wsliangjian/article/details/101199164
+1.使用了更多的嵌入结构代替了需要独立分配内存的结构,例如：Buckets直接嵌入到hashtable结构体中，zval直接嵌入到backets中;
+2.hashtable冲突解决使用单链表代替双向链表，减少了pre指针；
+
+#php底层运行原理：https://www.cnblogs.com/wanglijun/p/8830932.html
 多进程多线程模型；弱类型语言；
 引擎（Zend）+组件（ext）的模式降低内部耦合；
 架构：上层应用(如nginx)->sapi（如cgi）->php->zend；
-php5的Zend hashtable实现了hash表散列结构，同时附加一个双向链表，提供了正向、反向遍历功能;
 
 5.cgi/fastcgi:https://blog.csdn.net/belen_xue/article/details/65950658
 cgi和fastcgi都是一种协议，是上层应用服务器如nginx和语言通信的协议桥梁；fastcgi相比cgi针对频繁开启关闭做了优化；
@@ -40,4 +96,12 @@ php_fpm和php-cgi是 php提供的 服务器与php通信的 fastcgi和cgi协议�
 php-fpm还附带一些其他的功能：例如平滑过渡配置更改;
 php-fpm采用master/worker架构设计,在worker进程处理请求时，无需初始化PHP运行环境。
 6.fastcgi_finish_request()之后的代码，虽然不占Web服务器时间，快速响应。后边的代码还是要占用work进程的时间。耗时较长的可以用异步事件模式。
+
+#GC垃圾回收：https://www.cnblogs.com/lmp5023/p/14108145.html
+php将每个运行域（方法/函数）作为一次生命周期,每次执行完一个域,将回收域内所有相关变量；
+全局变量只有在脚本结束后才会回收；
+手动回收有以下几种方式:unset,赋值为null,变量赋值覆盖,gc_collect_cycles函数回收；
+unset的回收原理：其实就是引用计数-1,当引用计数-1之后为0时,将会直接回收该变量；
+=null和unset()区别：都将变量值引用计数-1,但是unset是将变量名从php底层变量表中清理,该变量就没了，而=null变量名还存在:
+gc_colect_cycles 函数会从php的符号表,遍历所有变量,去实现引用计数的计算并清理内存,将消耗大量的cpu资源,不建议频繁使用;
 

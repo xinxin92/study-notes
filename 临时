@@ -45,16 +45,18 @@ es
 
 
 贝壳：
+4.io复用模型；nginx，套接字；
+5.消息队列：kafka,es；
+
 1.php:
 zvalue结构体，数组实现；
 lnmp nginx，502,504；
 nginx，master进程kill,work进程怎么监听；
+
 2.mysql:索引类型，结构，树高几层；
 复合索引，B树结构；
 事务隔离级别，幻度；
 优化：explain;临时表；
-4.io复用模型；nginx，套接字；
-5.消息队列：kafka,es；
 
 3.redis:
 几个对象，几个数据结构；zset、map是什么结构；跳表，hashtable扩容，压缩列表；
