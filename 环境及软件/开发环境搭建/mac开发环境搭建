@@ -47,7 +47,10 @@ sudo nginx -t          #检测配置文件中是否存在语法错误
 
 修改配置支持php：
 sudo vi /opt/homebrew/etc/nginx/nginx.conf
-修改两处：添加index.php及document_root
+添加index.php、document_root、server_names_hash_bucket_size、去注释改端口等：
+server {
+    listen       80;
+}
 location / {
     root   html;
     index  index.html index.htm index.php;
@@ -59,19 +62,48 @@ location ~ \.php$ {
     fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
     include        fastcgi_params;
 }
+http {
+    ......
+    server_names_hash_bucket_size 128;
+    ......
+}
 添加php测试文件：
 cd /opt/homebrew/var/www
 touch index.php
 sudo vi index.php
 <?php phpinfo(); ?>
-浏览器访问：localhost:8080/index.php
+浏览器访问：localhost/index.php
 
+项目nginx.conf示例：
+server {
+        listen 80;
+        server_name  local.housemonitor.58corp.com;
+        index index.html index.htm index.php;
+        root /Users/yuxinwei/Documents/work/project/hbg_php_housemonitor/phpapps/housemonitor/public;
+        proxy_ignore_client_abort on;
 
+        set $https_tag "off";
+        if ($http_x_scheme ~* "https") {
+            set $https_tag "on";
+        }
 
+        set $php_script_name "index.php";
 
+        location ~* /static/.*\.(js|fonts|img|css|map|ico|png|json)$  {
+            access_log  off;
+        }
 
+        location = /favicon.ico {
+            log_not_found off;
+            access_log off;
+        }
 
-
-
-
-
+        location / {
+            include         fastcgi_params;
+            fastcgi_pass    127.0.0.1:9000;
+            fastcgi_param   SERVER_NAME         $host;
+            fastcgi_param   SCRIPT_FILENAME     $document_root/$php_script_name;
+            fastcgi_param   SCRIPT_NAME         /$php_script_name;
+            fastcgi_param   HTTPS               $https_tag;
+        }
+}
