@@ -1,0 +1,77 @@
+#homebrew
+安装：https://www.jianshu.com/p/01a9800612d3
+安装脚本（选择2清华大学源）：/bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)"
+卸载脚本：/bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/HomebrewUninstall.sh)"
+
+更换镜像源：https://www.jianshu.com/p/631e63dab0a0
+cd /opt/homebrew
+git remote -v
+git remote set-url origin git://mirrors.tuna.tsinghua.edu.cn/homebrew.git
+brew的官方镜像源为: https://github.com/Homebrew/homebrew
+清华镜像源: git://mirrors.tuna.tsinghua.edu.cn/homebrew.git
+中科大镜像源: http://mirrors.ustc.edu.cn/homebrew.git
+
+使用：
+1.查看Homebrew命令：brew help
+2.安装任意包：brew install <packageName>，eg：brew install node
+3.卸载任意包：brew uninstall <packageName>，eg：brew uninstall git
+4.查询可用包：brew search <packageName>
+5.查询已安装包列表：brew list
+6.查看任意包信息：brew info <packageName>
+7.更新Homebrew：brew update
+8.Homebrew帮助信息：brew -h
+9.查看brew版本：brew -v
+10.整理重复语句：open ~/.zshrc -e、open ~/.bash_profile -e
+
+
+#php安装及配置
+查看及安装：
+brew search php
+brew install php@7.2
+加载配置：
+echo 'export PATH="/opt/homebrew/opt/php@7.2/bin:$PATH"' >> ~/.zshrc
+echo 'export PATH="/opt/homebrew/opt/php@7.2/sbin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+查看安装版本：php -v
+
+
+#nginx安装及配置
+安装：brew install nginx
+启动nginx：brew services start nginx
+nginx常用命令：
+sudo nginx             #启动nginx服务
+sudo nginx -s reload   #重启nginx服务
+sudo nginx -s stop     #停止nginx服务
+sudo nginx -t          #检测配置文件中是否存在语法错误
+浏览器访问：localhost:8080
+
+修改配置支持php：
+sudo vi /opt/homebrew/etc/nginx/nginx.conf
+修改两处：添加index.php及document_root
+location / {
+    root   html;
+    index  index.html index.htm index.php;
+}
+location ~ \.php$ {
+    root           html;
+    fastcgi_pass   127.0.0.1:9000;
+    fastcgi_index  index.php;
+    fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+    include        fastcgi_params;
+}
+添加php测试文件：
+cd /opt/homebrew/var/www
+touch index.php
+sudo vi index.php
+<?php phpinfo(); ?>
+浏览器访问：localhost:8080/index.php
+
+
+
+
+
+
+
+
+
+
