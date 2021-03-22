@@ -1,3 +1,6 @@
+#xcode
+xcode-select --install
+
 #homebrew
 安装：https://www.jianshu.com/p/01a9800612d3
 安装脚本（选择2清华大学源）：/bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)"
@@ -34,6 +37,23 @@ echo 'export PATH="/opt/homebrew/opt/php@7.2/sbin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 查看安装版本：php -v
 
+php扩展：
+apcu下载：http://pecl.php.net/package/APCu
+apcu安装：
+进入到apcu的解压目录 执行命令:
+tar zxvf apcu-5.1.20.tgz
+/opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/phpize
+./configure --enable-apcu --with-php-config=/opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/php-config
+make && make install
+Installing shared extensions:     /opt/homebrew/Cellar/php@7.2/7.2.34_2/pecl/20170718/
+Installing header files:          /opt/homebrew/Cellar/php@7.2/7.2.34_2/include/php/
+修改/opt/homebrew/etc/php/7.2/php.ini,添加：
+extension = apcu.so
+apc.enabled= on
+apc.shm_size= 64M
+apc.enable_cli = on
+重启php-fpm
+brew services restart php@7.2
 
 #nginx安装及配置
 安装：brew install nginx
