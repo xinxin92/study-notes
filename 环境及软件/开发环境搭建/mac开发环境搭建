@@ -71,10 +71,11 @@ cd librdkafka
 make && make install
 再安装rdkafka:
 下载扩展包：https://pecl.php.net/package/rdkafka
-tar zxvf rdkafka-5.0.0.tgz
-cd rdkafka-5.0.0
+tar zxvf rdkafka-4.1.2.tgz
+cd rdkafka-4.1.2
 /opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/phpize
 ./configure --with-php-config=/opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/php-config
+make && make install
 修改/opt/homebrew/etc/php/7.2/php.ini，添加extension=rdkafka.so
 
 
