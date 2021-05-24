@@ -1,6 +1,7 @@
 #xcode
 xcode-select --install
 
+
 #homebrew
 安装：https://www.jianshu.com/p/01a9800612d3
 安装脚本（选择2清华大学源）：/bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)"
@@ -37,14 +38,23 @@ echo 'export PATH="/opt/homebrew/opt/php@7.2/sbin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 查看安装版本：php -v
 
-php扩展：
-apcu下载：http://pecl.php.net/package/APCu
-apcu安装：
-进入到apcu的解压目录 执行命令:
+
+#php扩展安装：
+php扩展目录：
+cd /opt/homebrew/Cellar/php@7.2/7.2.34_2/pecl/20170718/
+重启php-fpm
+brew services restart php@7.2
+
+#php-apcu扩展
+下载扩展包：http://pecl.php.net/package/APCu
+cd /opt/homebrew/opt
+mv apcu-5.1.20.tgz ./apcu-5.1.20.tgz
 tar zxvf apcu-5.1.20.tgz
+cd apcu-5.1.20.tgz
 /opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/phpize
 ./configure --enable-apcu --with-php-config=/opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/php-config
 make && make install
+安装成功提示安装位置：
 Installing shared extensions:     /opt/homebrew/Cellar/php@7.2/7.2.34_2/pecl/20170718/
 Installing header files:          /opt/homebrew/Cellar/php@7.2/7.2.34_2/include/php/
 修改/opt/homebrew/etc/php/7.2/php.ini,添加：
@@ -52,8 +62,22 @@ extension = apcu.so
 apc.enabled= on
 apc.shm_size= 64M
 apc.enable_cli = on
-重启php-fpm
-brew services restart php@7.2
+
+#php-rdkafka扩展安装：
+先安装librdkafka:
+git clone https://github.com/edenhill/librdkafka.git
+cd librdkafka
+./configure
+make && make install
+再安装rdkafka:
+下载扩展包：https://pecl.php.net/package/rdkafka
+tar zxvf rdkafka-5.0.0.tgz
+cd rdkafka-5.0.0
+/opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/phpize
+./configure --with-php-config=/opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/php-config
+修改/opt/homebrew/etc/php/7.2/php.ini，添加extension=rdkafka.so
+
+
 
 #nginx安装及配置
 安装：brew install nginx
