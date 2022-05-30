@@ -1,0 +1,6 @@
+#brew install go
+
+#查看版本号，注意M1一定得是arm的：go version
+    go version go1.18.2 darwin/arm64
+
+#查看go的环境变量配置：go env

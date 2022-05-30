@@ -27,6 +27,13 @@ brew的官方镜像源为: https://github.com/Homebrew/homebrew
 9.查看brew版本：brew -v
 10.整理重复语句：open ~/.zshrc -e、open ~/.bash_profile -e
 
+#git安装及升级
+#查看git指向: which git
+#查看git版本信息： git version
+#安装最新版Git: brew install git
+#通过brew link将git指向我们通过Homebrew安装的git：brew link git --overwrite
+#重新打开客户端后， 再次查看指向和版本，变成最新的
+
 
 #php安装及配置
 查看及安装：
