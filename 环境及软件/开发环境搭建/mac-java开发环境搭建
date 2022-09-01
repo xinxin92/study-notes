@@ -1,0 +1,58 @@
+
+#下载IDEA-2021.3版本
+
+#安装java的jdk(java8):
+brew tap adoptopenjdk/openjdk  
+brew cask install adoptopenjdk8
+
+#查看java home路径：
+/usr/libexec/java_home -V
+输出示例：/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
+
+#添加环境变量JAVA_HOME：
+vi ~/.zshrc
+添加：
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
+export MAVEN_HOME=/Applications/IntelliJ\ IDEA.app/Contents/plugins/maven/lib/maven3
+export PATH=$PATH:$JAVA_HOME/bin:$MAVEN_HOME/bin
+刷新：source ~/.zshrc
+重启客户端验证:echo $JAVA_HOME、echo $PATH
+
+
+#IDEA-2021.3版本自带maven的安装路径：/Applications/IntelliJ\ IDEA.app/Contents/plugins/maven/lib/maven3
+
+#添加环境变量MAVEN_HOME：
+vi ~/.zshrc
+添加：
+export MAVEN_HOME=/Applications/IntelliJ\ IDEA.app/Contents/plugins/maven/lib/maven3
+export PATH=$PATH:$JAVA_HOME/bin:$MAVEN_HOME/bin
+刷新：source ~/.zshrc
+重启客户端验证:echo $MAVEN_HOME、echo $PATH
+
+#权限解决：
+chmod a+x /Applications/IntelliJ\ IDEA.app/Contents/plugins/maven/lib/maven3/bin/mvn
+验证：mvn -v 
+
+#1.0.0.0https拦截解决：lmaven在3.8.1 的默认配置文件中增加了一组标签，如果仓库镜像是http而不是https就会被拦截禁止访问,而当前公司私服一般是http，而不支持https,解决：
+找到Maven安装目录
+编辑 $MAVEN_HOME/conf/settings.xml
+注释如下代码:
+<!--
+    <mirror>
+      <id>maven-default-http-blocker</id>
+      <mirrorOf>external:http:*</mirrorOf>
+      <name>Pseudo repository to mirror external repositories initially using HTTP.</name>
+      <url>http://0.0.0.0/</url>
+      <blocked>true</blocked>
+    </mirror>
+-->
+
+#ide配置maven:
+打开idea，在开始界面点击Customize（自定义）–>All settings（所有设置）；
+依次点击Build，Execution，Deployment（构建、执行、部署）–>Build Tools（构建工具）–>Maven；
+配置
+maven主路径：已捆绑(Maven 3)[idea自带的3.8.1版本]
+用户设置文件：/Users/yuxinwei/Documents/maven/settings.xml（注意settings.xml内容替换成公司的）
+本地仓库为自己的：/Users/yuxinwei/Documents/maven/repository
+备注：在maven_home/conf/settings.xml中有配置：localRepository是本地仓库配置(一般使用自定义的)； mirrors是远程仓库配置(一般使用公司统一的), 
+

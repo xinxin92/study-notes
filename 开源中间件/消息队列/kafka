@@ -1,0 +1,10 @@
+优秀文章：
+https://baijiahao.baidu.com/s?id=1719501564805569513&wfr=spider&for=pc
+https://www.orchome.com/5
+介绍了： 
+基本术语（broker,topic,partion,consumer等）、
+如何保证顺序性（全局顺序性及局部顺序性）、
+丢消息/消息重复的原因及解决、
+rebalance策略（round robib、range、sticky）、
+压缩介绍、
+速度为什么快（顺序读写、零拷贝、消息压缩、分批发送）
