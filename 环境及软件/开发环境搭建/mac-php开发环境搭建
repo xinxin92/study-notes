@@ -15,6 +15,9 @@ brew的官方镜像源为: https://github.com/Homebrew/homebrew
 清华镜像源: git://mirrors.tuna.tsinghua.edu.cn/homebrew.git
 中科大镜像源: http://mirrors.ustc.edu.cn/homebrew.git
 
+如果在安装插件时，想跳过自动更新，在使用前，设置一下环境变量即可: export HOMEBREW_NO_AUTO_UPDATE=true
+如果不想要每次安装都去设置环境变量，也可以配置在（~/.bash_profile）中，将上面的命令追加在后面即可。
+
 使用：
 1.查看Homebrew命令：brew help
 2.安装任意包：brew install <packageName>，eg：brew install node
@@ -26,6 +29,9 @@ brew的官方镜像源为: https://github.com/Homebrew/homebrew
 8.Homebrew帮助信息：brew -h
 9.查看brew版本：brew -v
 10.整理重复语句：open ~/.zshrc -e、open ~/.bash_profile -e
+brew config：查看brew配置来源
+brew list --versions:列出所有已安装的formula（软件包）和cask（应用包）及版本。
+brew services list：查看服务运行情况
 
 Homebrew ：brew 程序所在路径，homebrew 的仓库位置默认位于/usr/local/Homebrew 下
 Cellar ：文件夹存放的是所有包安装所在路径，包括二进制，文档和配置文件，按照这样 Cellar/包名/版本号/ 的形式来安放。
@@ -68,19 +74,22 @@ cd /opt/homebrew/Cellar/php@7.2/7.2.34_2/pecl/20170718/
 重启php-fpm
 brew services restart php@7.2
 
+old：/opt/homebrew
+new: /usr/local
+
 #php-apcu扩展
 下载扩展包：http://pecl.php.net/package/APCu
-cd /opt/homebrew/opt
+cd /opt/homebrew/opt (/usr/local/opt
 mv apcu-5.1.20.tgz ./apcu-5.1.20.tgz
 tar zxvf apcu-5.1.20.tgz
 cd apcu-5.1.20.tgz
-/opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/phpize
-./configure --enable-apcu --with-php-config=/opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/php-config
+/opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/phpize  (new: /usr/local/Cellar/php@7.2/7.2.34_6/bin/phpize)
+./configure --enable-apcu --with-php-config=/opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/php-config (./configure --enable-redis --with-php-config=/usr/local/Cellar/php@7.2/7.2.34_6/bin/php-config)
 make && make install
 安装成功提示安装位置：
 Installing shared extensions:     /opt/homebrew/Cellar/php@7.2/7.2.34_2/pecl/20170718/
 Installing header files:          /opt/homebrew/Cellar/php@7.2/7.2.34_2/include/php/
-修改/opt/homebrew/etc/php/7.2/php.ini,添加：
+修改/opt/homebrew/etc/php/7.2/php.ini,添加： (/usr/local/etc/php/7.2/php.ini)
 extension = apcu.so
 apc.enabled= on
 apc.shm_size= 64M
@@ -98,7 +107,7 @@ tar zxvf rdkafka-4.1.2.tgz
 cd rdkafka-4.1.2
 /opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/phpize
 ./configure --with-php-config=/opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/php-config
-make && make install
+sudo && make install
 修改/opt/homebrew/etc/php/7.2/php.ini，添加extension=rdkafka.so
 
 
