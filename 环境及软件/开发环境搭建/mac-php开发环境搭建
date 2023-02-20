@@ -27,6 +27,20 @@ brew的官方镜像源为: https://github.com/Homebrew/homebrew
 9.查看brew版本：brew -v
 10.整理重复语句：open ~/.zshrc -e、open ~/.bash_profile -e
 
+Homebrew ：brew 程序所在路径，homebrew 的仓库位置默认位于/usr/local/Homebrew 下
+Cellar ：文件夹存放的是所有包安装所在路径，包括二进制，文档和配置文件，按照这样 Cellar/包名/版本号/ 的形式来安放。
+keg：具体某个包所在的目录，是 cellar 的子目录。
+opt ：由于版本号随着跟新而改变的，所以需要一个固定不变的路径作为我们访问二进制和文档的路径，这就是 opt 的作用。
+bin ：所有包安装之后二进制都会链接到这个路径下
+share ：所有包安装之后的文档都会链接到这个路径下
+etc ：同上，所有包的配置文件
+lib ：同上，所有包相关库文件
+Caskroom ：app 文件
+
+————————————————
+版权声明：本文为CSDN博主「M-Codes」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/efew212efe/article/details/124974503
+
 #git安装及升级
 #查看git指向: which git
 #查看git版本信息： git version
@@ -37,6 +51,7 @@ brew的官方镜像源为: https://github.com/Homebrew/homebrew
 
 #php安装及配置
 查看及安装：
+brew tap shivammathur/php （没有目标版本时挂载第三方扩展）
 brew search php
 brew install php@7.2
 加载配置：
@@ -44,6 +59,7 @@ echo 'export PATH="/opt/homebrew/opt/php@7.2/bin:$PATH"' >> ~/.zshrc
 echo 'export PATH="/opt/homebrew/opt/php@7.2/sbin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 查看安装版本：php -v
+安装php版本切换控制：brew install brew-php-switcher
 
 
 #php扩展安装：
