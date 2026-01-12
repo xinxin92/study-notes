@@ -1,6 +1,38 @@
+
+常用命令：
+# 服务管理（重启 / 状态检查）
+重启 PHP-FPM	         brew services restart shivammathur/php/php@7.2
+重启 Nginx	         brew services restart nginx
+手动重启 nginx        sudo /opt/homebrew/opt/nginx/bin/nginx -s reload
+查看 PHP-FPM 运行状态	 brew services list	grep php@7.2	检查 PHP-FPM 是否正在运行（显示 started 为正常）
+查看 Nginx 运行状态	 brew services list	grep nginx	检查 Nginx 是否正在运行
+强制停止 PHP-FPM	     brew services stop shivammathur/php/php@7.2	配置出错时先停止，再手动启动排查
+手动启动PHP-FPM（查错） sudo /opt/homebrew/opt/php@7.2/sbin/php-fpm -y /opt/homebrew/etc/php/7.2/php-fpm.conf	启动时直接显示错误（如配置语法错误），比 brew services 更易查错
+
+# 日常调试及定位问题：
+实时监控 PHP-FPM 报错日志	tail -f /opt/homebrew/var/log/php/7.2/www-error.log	开发时实时看报错，按 Ctrl+C 退出
+查看 PHP 命令行日志	tail -f /opt/homebrew/var/log/php/7.2/error.log	调试 php xxx.php 命令行脚本的报错
+查看 Nginx 访问日志	tail -f /opt/homebrew/var/log/nginx/access.log	看接口请求是否到达 Nginx、返回状态码（如 500/404）
+查看 Nginx 错误日志	tail -f /opt/homebrew/var/log/nginx/error.log	排查 Nginx 配置错误、转发失败等问题
+查看日志最后 100 行	tail -n 100 /opt/homebrew/var/log/php/7.2/www-error.log	快速定位历史报错，不用实时监控
+清空日志文件（调试用）	> /opt/homebrew/var/log/php/7.2/www-error.log	清空旧日志，只看新报错（避免干扰）
+
+# 配置文件编辑
+编辑 nginx主配置文件	sudo vi /opt/homebrew/etc/nginx/nginx.conf	修改全局配置（如 worker 进程、端口、include 子配置）
+编辑 Nginx 站点配置	sudo vi /opt/homebrew/etc/nginx/servers/	修改域名转发、fastcgi_pass 等站点配置（替换为你的实际配置文件名）
+查看 Nginx 配置语法	nginx -t	修改 Nginx 配置后，先验证语法是否正确（避免重启失败）
+查找 Nginx 站点配置文件	grep -r "local.i-clue-home.com" /opt/homebrew/etc/nginx/	找不到配置文件时，按域名搜索
+默认网站根目录	/opt/homebrew/var/www/	Nginx 默认访问的根目录（放 index.php/test.html 测试文件）
+编辑 PHP-FPM 核心配置	sudo vi /opt/homebrew/etc/php/7.2/php-fpm.d/www.conf	修改日志路径、运行用户、慢日志等核心配置
+编辑 PHP 全局配置	    sudo vi /opt/homebrew/etc/php/7.2/php.ini	修改 display_errors、error_reporting 等 PHP 全局参数
+查看 PHP-FPM 配置是否生效	`/opt/homebrew/opt/php@7.2/sbin/php-fpm -tt	grep -i error_log`	验证 error_log 等配置是否加载（排除配置未生效问题）
+查看 PHP 运行时配置	在 PHP 文件中加 echo ini_get('error_log');	排查「配置生效但日志路径不对」的隐性问题
+
+
+
+【方法一】手动装 Nginx + PHP 7.2 + php扩展
 #xcode
 xcode-select --install
-
 
 #homebrew
 安装：https://www.jianshu.com/p/01a9800612d3
@@ -60,12 +92,24 @@ Caskroom ：app 文件
 brew tap shivammathur/php （没有目标版本时挂载第三方扩展）
 brew search php
 brew install php@7.2
+
 加载配置：
 echo 'export PATH="/opt/homebrew/opt/php@7.2/bin:$PATH"' >> ~/.zshrc
 echo 'export PATH="/opt/homebrew/opt/php@7.2/sbin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 查看安装版本：php -v
 安装php版本切换控制：brew install brew-php-switcher
+
+或者：安装 PHP 7.2（适配 M4 芯片，无 tidy 依赖坑）
+brew tap shivammathur/php
+brew install shivammathur/php/php@7.2
+brew link php@7.2 --force --overwrite
+brew services start shivammathur/php/php@7.2
+
+# 配置 Nginx 登录自启
+brew services start nginx
+# 配置 PHP 7.2 登录自启（用你安装的版本）
+brew services start shivammathur/php/php@7.2
 
 
 #php扩展安装：
@@ -95,6 +139,7 @@ apc.enabled= on
 apc.shm_size= 64M
 apc.enable_cli = on
 
+
 #php-rdkafka扩展安装：
 先安装librdkafka:
 git clone https://github.com/edenhill/librdkafka.git
@@ -109,6 +154,67 @@ cd rdkafka-4.1.2
 ./configure --with-php-config=/opt/homebrew/Cellar/php@7.2/7.2.34_2/bin/php-config
 sudo && make install
 修改/opt/homebrew/etc/php/7.2/php.ini，添加extension=rdkafka.so
+
+
+# PHP 扩展 APCu + rdkafka + redis安装笔记（适配 macOS M4 + PHP 7.2）
+环境信息
+系统：macOS（M4 芯片）
+PHP 版本：7.2（brew 安装路径：/opt/homebrew/Cellar/php@7.2）
+核心工具路径：
+phpize：/opt/homebrew/bin/phpize
+php-config：/opt/homebrew/bin/php-config
+php.ini：/opt/homebrew/etc/php/7.2/php.ini
+
+cd ~/Downloads
+curl -sSL https://pecl.php.net/get/apcu-5.1.20.tgz | tar zxf -
+cd apcu-5.1.20
+# 清理旧配置 + 生成 configure 文件
+/opt/homebrew/bin/phpize --clean
+/opt/homebrew/bin/phpize
+# 配置 + 编译 + 安装
+./configure --enable-apcu --with-php-config=/opt/homebrew/bin/php-config
+make -j8
+sudo make install
+# 先删除旧配置，避免重复加载
+sed -i '' '/apcu.so/d' /opt/homebrew/etc/php/7.2/php.ini
+# 写入新配置
+echo -e "extension=apcu.so\napc.enabled=1\napc.shm_size=64M\napc.enable_cli=1" >> /opt/homebrew/etc/php/7.2/php.ini
+# 验证安装（输出 apcu 则成功）
+php -m | grep apcu
+
+cd ~/Downloads
+git clone --depth=1 https://github.com/edenhill/librdkafka.git
+cd librdkafka
+# 清理残留 + 指定 clang++ 编译（适配 macOS）
+make clean
+./configure --prefix=/opt/homebrew/opt/librdkafka CXX=clang++ CC=clang
+make -j8
+sudo make install
+
+cd ~/Downloads
+curl -sSL https://pecl.php.net/get/rdkafka-4.1.2.tgz | tar zxf -
+cd rdkafka-4.1.2
+# 清理 + 生成 configure
+/opt/homebrew/bin/phpize --clean
+/opt/homebrew/bin/phpize
+# 关联 librdkafka 路径 + 编译安装
+./configure --with-php-config=/opt/homebrew/bin/php-config --with-rdkafka=/opt/homebrew/opt/librdkafka
+make -j8
+sudo make install
+# 删除旧配置
+sed -i '' '/rdkafka.so/d' /opt/homebrew/etc/php/7.2/php.ini
+# 写入新配置
+echo "extension=rdkafka.so" >> /opt/homebrew/etc/php/7.2/php.ini
+# 重启 PHP-FPM 生效
+brew services restart shivammathur/php/php@7.2
+# 验证安装（输出 rdkafka 则成功）
+php -m | grep rdkafka
+
+# 一键查看两个扩展是否加载
+php -m | grep -E "apcu|rdkafka"
+# 预期输出：
+# apcu
+# rdkafka
 
 
 
@@ -184,3 +290,46 @@ server {
             fastcgi_param   HTTPS               $https_tag;
         }
 }
+
+
+【方法二】Laravel Valet（轻量命令行集成环境）
+资源占用极低，自动配置 Nginx/hosts，多版本PHP一键切换，无图形界面，依赖 Homebrew；适合熟悉命令行、追求极简的 PHP 开发者；
+
+#安装前准备工作：
+# 更新 brew 到最新版：确保 brew 支持 M4 + PHP 7.2：
+brew update && brew upgrade
+brew cleanup
+
+# 确认 Command Line Tools 已装：
+xcode-select -p  # 输出 /Library/Developer/CommandLineTools 则已装；否则执行 xcode-select --install
+
+#开始安装：
+# 用 composer 全局安装 Laravel Valet（这是官方正确安装方式）
+composer global require laravel/valet
+
+# 步骤2：添加 PHP 7.2 适配源 + 安装 PHP 7.2
+brew tap shivammathur/php
+brew install shivammathur/php/php@7.2
+
+# 步骤3：切换 Valet 到 PHP 7.2
+valet use php@7.2
+
+# 步骤4：安装 Redis + 扩展
+brew install redis && brew services start redis
+pecl install redis-5.3.7
+
+# 步骤5：安装 Kafka 依赖 + rdkafka 扩展
+brew install librdkafka
+pecl install rdkafka-4.1.2
+
+# 步骤6：验证安装
+php -v  # 应输出 PHP 7.2.x
+php -m | grep redis  # 输出 redis
+php -m | grep rdkafka  # 输出 rdkafka
+valet start
+
+
+
+
+【方法三】安装MxSrvs软件；
+傻瓜式，社区支持较少，问题排查资源有限，高级配置（如 Kafka 扩展）需手动补装；
