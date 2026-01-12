@@ -210,12 +210,31 @@ brew services restart shivammathur/php/php@7.2
 # 验证安装（输出 rdkafka 则成功）
 php -m | grep rdkafka
 
-# 一键查看两个扩展是否加载
-php -m | grep -E "apcu|rdkafka"
+cd ~/Downloads
+# 下载适配 PHP 7.2 的 Redis 扩展源码（5.3.7 是兼容 7.2 的稳定版）
+curl -sSL https://pecl.php.net/get/redis-5.3.7.tgz | tar zxf -
+cd redis-5.3.7
+# 清理旧配置 + 生成 configure 文件
+/opt/homebrew/bin/phpize --clean
+/opt/homebrew/bin/phpize
+# 配置 + 编译 + 安装（-j8 适配 M4 多核编译）
+./configure --enable-redis --with-php-config=/opt/homebrew/bin/php-config
+make -j8
+sudo make install
+# 先删除旧配置，避免重复加载
+sed -i '' '/redis.so/d' /opt/homebrew/etc/php/7.2/php.ini
+# 写入新配置（仅保留核心扩展加载，按需可加自定义配置）
+echo "extension=redis.so" >> /opt/homebrew/etc/php/7.2/php.ini
+# 重启 PHP-FPM 生效
+brew services restart shivammathur/php/php@7.2
+# 验证安装（输出 redis 则成功）
+php -m | grep redis
+# 一键查看所有扩展（apcu + rdkafka + redis）是否加载
+php -m | grep -E "apcu|rdkafka|redis"
 # 预期输出：
 # apcu
 # rdkafka
-
+# redis
 
 
 #nginx安装及配置
