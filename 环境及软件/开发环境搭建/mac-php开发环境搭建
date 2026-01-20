@@ -21,7 +21,7 @@
 编辑 nginx主配置文件	sudo vi /opt/homebrew/etc/nginx/nginx.conf	修改全局配置（如 worker 进程、端口、include 子配置）
 编辑 Nginx 站点配置	sudo vi /opt/homebrew/etc/nginx/servers/	修改域名转发、fastcgi_pass 等站点配置（替换为你的实际配置文件名）
 查看 Nginx 配置语法	nginx -t	修改 Nginx 配置后，先验证语法是否正确（避免重启失败）
-查找 Nginx 站点配置文件	grep -r "local.i-clue-home.com" /opt/homebrew/etc/nginx/	找不到配置文件时，按域名搜索
+查找 Nginx 站点配置文件	cd /opt/homebrew/etc/nginx/servers
 默认网站根目录	/opt/homebrew/var/www/	Nginx 默认访问的根目录（放 index.php/test.html 测试文件）
 编辑 PHP-FPM 核心配置	sudo vi /opt/homebrew/etc/php/7.2/php-fpm.d/www.conf	修改日志路径、运行用户、慢日志等核心配置
 编辑 PHP 全局配置	    sudo vi /opt/homebrew/etc/php/7.2/php.ini	修改 display_errors、error_reporting 等 PHP 全局参数
@@ -237,6 +237,15 @@ php -m | grep -E "apcu|rdkafka|redis"
 # redis
 
 
+apollo安装：
+# 进入源码根目录
+cd /Users/yuxinwei/Documents/work/software/apollo/apollo-agent
+# 赋予执行权限
+chmod +x agent_install.sh
+# 执行脚本（此时会调用 CMake 3.5.2，无版本错误）
+./agent_install.sh
+
+
 #nginx安装及配置
 安装：brew install nginx
 启动nginx：brew services start nginx
@@ -310,45 +319,55 @@ server {
         }
 }
 
-
-【方法二】Laravel Valet（轻量命令行集成环境）
-资源占用极低，自动配置 Nginx/hosts，多版本PHP一键切换，无图形界面，依赖 Homebrew；适合熟悉命令行、追求极简的 PHP 开发者；
-
-#安装前准备工作：
-# 更新 brew 到最新版：确保 brew 支持 M4 + PHP 7.2：
-brew update && brew upgrade
-brew cleanup
-
-# 确认 Command Line Tools 已装：
-xcode-select -p  # 输出 /Library/Developer/CommandLineTools 则已装；否则执行 xcode-select --install
-
-#开始安装：
-# 用 composer 全局安装 Laravel Valet（这是官方正确安装方式）
-composer global require laravel/valet
-
-# 步骤2：添加 PHP 7.2 适配源 + 安装 PHP 7.2
-brew tap shivammathur/php
-brew install shivammathur/php/php@7.2
-
-# 步骤3：切换 Valet 到 PHP 7.2
-valet use php@7.2
-
-# 步骤4：安装 Redis + 扩展
-brew install redis && brew services start redis
-pecl install redis-5.3.7
-
-# 步骤5：安装 Kafka 依赖 + rdkafka 扩展
-brew install librdkafka
-pecl install rdkafka-4.1.2
-
-# 步骤6：验证安装
-php -v  # 应输出 PHP 7.2.x
-php -m | grep redis  # 输出 redis
-php -m | grep rdkafka  # 输出 rdkafka
-valet start
-
-
-
-
-【方法三】安装MxSrvs软件；
+【方法二】安装MxSrvs软件；
 傻瓜式，社区支持较少，问题排查资源有限，高级配置（如 Kafka 扩展）需手动补装；
+
+罗列已经安装的扩展：
+/Applications/MxSrvs/bin/php/bin/php -m
+
+安装php-redis扩展：
+cd /Applications/MxSrvs
+# 下载并解压 Redis 5.3.7 源码
+curl -sSL https://pecl.php.net/get/redis-5.3.7.tgz | tar zxf -
+# 进入源码目录
+cd /Applications/MxSrvs/redis-5.3.7
+# 1. 生成 configure 文件（和之前一致）
+/Applications/MxSrvs/bin/php/bin/phpize
+# 2. 配置编译参数，强制指定 X86_64 架构（核心修改）
+CFLAGS="-arch x86_64" CXXFLAGS="-arch x86_64" LDFLAGS="-arch x86_64" \
+./configure --enable-redis --with-php-config=/Applications/MxSrvs/bin/php/bin/php-config
+# 3. 编译（强制 X86_64 架构）
+make -j8 CFLAGS="-arch x86_64" CXXFLAGS="-arch x86_64" LDFLAGS="-arch x86_64"
+# 4. 安装
+sudo make install
+# 添加扩展.so文件
+find /Applications/MxSrvs -name "mbstring.so"
+sed -i '' '/mbstring.so/d' /Applications/MxSrvs/bin/php/etc/php.ini
+echo "extension=/Applications/MxSrvs/bin/php/lib/php/extensions/no-debug-non-zts-20190902/mbstring.so" >> /Applications/MxSrvs/bin/php/etc/php.ini
+重启：
+/Applications/MxSrvs/bin/nginx/sbin/nginx -s reload
+
+
+站点配置域名站点：
+server {
+	listen 80;
+	server_name local.i-clue-home.com;
+	index index.php;
+	root /Users/yuxinwei/Documents/work/project/i-clue-home/public;
+	location / {
+        try_files  $uri $uri/ /index.php?$query_string;
+    }
+	location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $request_filename;
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+    }
+}
+
+
+
+
+
+
+

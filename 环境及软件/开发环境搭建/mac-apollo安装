@@ -1,0 +1,54 @@
+
+#安装apollo相关的qconfig扩展以及apollo-agent;
+第一步：
+# 克隆公司apollo-agent源码（需公司git的项目权限）
+cd ~/Downloads
+git clone http://git.lianjia.com/life/apollo-agent.git
+
+第二部:
+#修改代码兼容mac环境
+(1)
+# 修改 agent/CMakeLists.txt:73-74
+# 使用 CMAKE 变量和条件判断
+IF(APPLE)
+    # macOS 使用用户目录或 /usr/local
+    set(QCONF_DATA_DIR "$ENV{HOME}/.qconf" CACHE PATH "QConf data directory")
+ELSE()
+    # Linux 使用传统路径
+    set(QCONF_DATA_DIR "/data0/qconf" CACHE PATH "QConf data directory")
+ENDIF()
+# 创建数据目录
+execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${QCONF_DATA_DIR})
+execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${QCONF_DATA_DIR}/apollo_agent)
+
+(2)
+# 修改 agent_install.sh
+#!/bin/bash
+
+# 检测操作系统
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "Detected macOS"
+    cd "$(dirname "$0")"  # 使用脚本所在目录
+else
+    echo "Detected Linux"
+    cd /root/apollo-agent/
+fi
+
+cd deps/gdbm && autoreconf
+
+echo "config success"
+
+# 返回项目根目录
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    cd ../..
+else
+    cd /root/apollo-agent/
+fi
+
+mkdir -p build && cd build && ~/Downloads/cmake-3.5.2-Darwin-x86_64/CMake.app/Contents/bin/cmake ..
+
+echo "cmake success"
+
+make && make install
+
+(3)
